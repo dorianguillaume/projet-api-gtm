@@ -23,6 +23,6 @@ namespace projetAPI_GTM.Models
         public virtual Adresse Adresse { get; set; }
         public virtual ICollection<Facture> Facture { get; set; }
         public virtual ICollection<Reservation> Reservation { get; set; }
-        public virtual ICollection<Telephone> Telephone { get; set; }
+        public virtual HashSet<Telephone> Telephone { get; set; }
     }
 }

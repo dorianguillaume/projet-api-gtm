@@ -11,6 +11,6 @@ namespace projetAPI_GTM.Models
         public string CodePostal { get; set; }
         public string Ville { get; set; }
 
-        public virtual Client IdClientNavigation { get; set; }
+        internal virtual Client IdClientNavigation { get; set; }
     }
 }
