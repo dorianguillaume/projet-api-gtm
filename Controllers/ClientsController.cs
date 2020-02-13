@@ -28,7 +28,11 @@ namespace projetAPI_GTM.Controllers
             return await _context.Client.ToListAsync();
         }
 
-        // GET: grandhotel/Clients/5
+        /// <summary>
+        /// GET: grandhotel/Clients/5
+        /// </summary>
+        /// <param name="id">Id du client</param>
+        /// <returns>Retourn les informations d'un client avec le détail de son Adresse et de son/ses numéros de téléphones</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Client>> GetClient(int id)
         {
@@ -133,9 +137,11 @@ namespace projetAPI_GTM.Controllers
             }
             else
             {
+                //In récupère adresse et téléphones
                 var adresse = await _context.Adresse.Where(a => a.IdClient == id).FirstOrDefaultAsync();
                 var telephone = await _context.Telephone.Where(t => t.IdClient == id).ToListAsync();
 
+                //SI telephone et numéro non vide on supprime l'.les entitée.s
                 if (telephone.Any())
                 {
                     _context.Telephone.RemoveRange(telephone);
