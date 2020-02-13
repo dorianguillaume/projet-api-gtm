@@ -38,13 +38,79 @@ order by year(f.DateFacture), datepart(qq, f.DateFacture)
 -- 5.	Le nombre d'argent qu'a depensé chaque client / qu'on regroupe par tranche
 -- Le nombre de clients dans chaque tranche de 1000 € de chiffre d’affaire total généré. La première tranche est < 5000 €, et la dernière >= 8000 €
 -- PAS GOOD
--- select f.IdClient, sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) 
--- from LigneFacture lf
--- join Facture f on lf.IdFacture = f.Id
--- group by f.IdClient
+select *
+
+from (
+
+	select '5000 et Moins' as Tranche, count(SommeClients) AS NbClient
+	from (select SUM(f.IdClient) as SommeClients 
+	from LigneFacture lf
+	join Facture f on lf.IdFacture = f.Id
+	group by f.IdClient
+	HAVING sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) < 5000) as Clients
+
+	UNION
+
+	select '5000-6000' as Tranche, count(Tranche1) AS NbClient
+	from (select SUM(f.IdClient) as Tranche1 
+	from LigneFacture lf
+	join Facture f on lf.IdFacture = f.Id
+	group by f.IdClient
+	HAVING sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) BETWEEN 5000 AND 6000) as Clients
+
+	UNION 
+
+	select '6000-7000' as Tranche, count(SommeClients) AS NbClient
+	from (select SUM(f.IdClient) as SommeClients 
+	from LigneFacture lf
+	join Facture f on lf.IdFacture = f.Id
+	group by f.IdClient
+	HAVING sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) BETWEEN 6000 AND 7000) as Clients
+
+	UNION 
+
+	select '7000-8000' as Tranche, count(SommeClients) AS NbClient
+	from (select SUM(f.IdClient) as SommeClients 
+	from LigneFacture lf
+	join Facture f on lf.IdFacture = f.Id
+	group by f.IdClient
+	HAVING sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) BETWEEN 7000 AND 8000) as Clients
+
+	UNION 
+
+	select '8000 et Plus' as Tranche, count(SommeClients) AS NbClient
+	from (select SUM(f.IdClient) as SommeClients 
+	from LigneFacture lf
+	join Facture f on lf.IdFacture = f.Id
+	group by f.IdClient
+	HAVING sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) > 8000) as Clients
+
+) as Ratio
 
 -- 6.	Code T-SQL pour augmenter à partir du 01/01/2019 les tarifs des chambres de type 1 de 5%, et ceux des chambres de type 2 de 4% par rapport à l'année précédente
+-- Demander si il faut modifier TarifChambre ???
+declare @PrixType1 int;
+declare @PrixType2 int;
 
+set @PrixType1 = (
+    select sum((P) * (1.05))
+    from(
+        select Prix as P 
+        from Tarif 
+        where Code = 'CHB1-2018') 
+        as prix
+    );
+set @PrixType2 = (
+select sum((P) * (1.04))
+from(
+    select Prix as P 
+    from Tarif 
+    where Code = 'CHB2-2018') 
+    as prix
+);
+
+insert into Tarif(Code, DateDebut, Prix) values('CHB1-2019', '2019-01-01', @PrixType1)
+insert into Tarif(Code, DateDebut, Prix) values('CHB2-2019', '2019-01-01', @PrixType2)
 
 -- 7.	Clients qui ont passé au total au moins 7 jours à l’hôtel au cours d’un même mois (Id, Nom, mois où ils ont passé au moins 7 jours)
 select cl.Id, cl.Nom, Month(ca.Jour) as Mois from Client cl
