@@ -12,6 +12,6 @@ namespace projetAPI_GTM.Models
         public decimal TauxTva { get; set; }
         public decimal TauxReduction { get; set; }
 
-        public virtual Facture IdFactureNavigation { get; set; }
+        internal virtual Facture IdFactureNavigation { get; set; }
     }
 }

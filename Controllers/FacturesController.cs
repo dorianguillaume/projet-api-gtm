@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using projetAPI_GTM.Models;
 
@@ -31,7 +32,7 @@ namespace projetAPI_GTM.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Facture>> GetFacture(int id)
         {
-            var facture = await _context.Facture.FindAsync(id);
+            var facture = await _context.Facture.Include(f => f.LigneFacture).FirstOrDefaultAsync(f => f.Id == id);
 
             if (facture == null)
             {
@@ -41,6 +42,7 @@ namespace projetAPI_GTM.Controllers
             return facture;
         }
 
+        // Obtenir les Factures d'un client avec son id et pour une date donnée
         [HttpGet("client/{id}")]
         public async Task<ActionResult<IEnumerable<Facture>>> GetFacture(int id, [FromQuery] DateTime date1, [FromQuery] DateTime date2)
         {
@@ -114,6 +116,37 @@ namespace projetAPI_GTM.Controllers
             return CreatedAtAction("GetFacture", new { id = facture.Id }, facture);
         }
 
+        // Ajouter une ligne à une facture donnée
+        [HttpPost("{id}/lignefacture")]
+        public async Task<ActionResult> PostLigneFacture(int id, LigneFacture lignefacture)
+        {
+            //On vérifie que l'id passé en paramètre est similaire à celui de la requête
+            if (id != lignefacture.IdFacture)
+            {
+                return BadRequest("Erreur ID facture entre la requête et l'url");
+            }
+
+            _context.LigneFacture.Add(lignefacture);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            catch (DbUpdateException e)
+            {
+                var sqle = e.InnerException as SqlException;
+
+                if (sqle.Number == 2627)
+                {
+                    return BadRequest("Le numéro de ligne de facture existe déjà dans la base");
+                }
+                return BadRequest("Erreur lors de l'ajout de la ligne de facture dans la base");
+            }
+
+            return Ok("Le numéro de ligne de facture créé est le suivant : " + lignefacture.NumLigne);
+        }
+    
         // DELETE: api/Factures/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Facture>> DeleteFacture(int id)
@@ -136,3 +169,4 @@ namespace projetAPI_GTM.Controllers
         }
     }
 }
+
