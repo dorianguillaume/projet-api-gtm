@@ -8,6 +8,7 @@ move 'GrandHotel_log' to  N'C:\Users\Shadow\workspace\projetAPI-GTM\bdd\GrandHot
 
 select * from Client C
 inner join Telephone T on(C.Id = T.IdClient)
+where T.Numero = 1;
 
 -- 2.	Le taux moyen de réservation de l’hôtel par mois-année (2015-01, 2015-02…), c'est à dire la moyenne sur les chambres du ratio (nombre de jours de réservation dans le mois / nombre de jours du mois)
 
