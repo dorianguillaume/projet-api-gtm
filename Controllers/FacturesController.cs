@@ -104,6 +104,7 @@ namespace projetAPI_GTM.Controllers
             return NoContent();
         }
 
+        // Créer une nouvelle facture
         // POST: api/Factures
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
@@ -116,7 +117,7 @@ namespace projetAPI_GTM.Controllers
             return CreatedAtAction("GetFacture", new { id = facture.Id }, facture);
         }
 
-        // Ajouter une ligne à une facture donnée
+        // Ajouter une ligne à une facture donnée (incrémentation manuelle car pas auto-incrémenté)
         [HttpPost("{id}/lignefacture")]
         public async Task<ActionResult> PostLigneFacture(int id, LigneFacture lignefacture)
         {
