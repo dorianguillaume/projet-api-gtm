@@ -19,11 +19,11 @@
                 "Clients"
             ],
             "method": "GET",
-            "url": "https://localhost:44375/grandhotel/clients/",
+            "url": "https://localhost:44375/grandhotel/clients/50",
             "headers": [],
             "body": "",
             "created_at": "2020-02-14T08:25:36.252Z",
-            "updated_at": "2020-02-14T09:16:43.509Z"
+            "updated_at": "2020-02-14T14:42:42.566Z"
         },
         "3- Créer un nouveau client et son adresse": {
             "name": "3- Créer un nouveau client et son adresse",
