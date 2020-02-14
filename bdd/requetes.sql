@@ -112,10 +112,7 @@ from(
 insert into Tarif(Code, DateDebut, Prix) values('CHB1-2019', '2019-01-01', @PrixType1)
 insert into Tarif(Code, DateDebut, Prix) values('CHB2-2019', '2019-01-01', @PrixType2)
 
-if exists (select NumChambre from TarifChambre where CodeTarif like 'CHB1%')
-    insert into TarifChambre(NumChambre,CodeTarif) values (Num, 'CHB1-2019');
-else
-    insert into TarifChambre(NumChambre, CodeTarif) values (Num, 'CHB2-2019');
+--insert into TarifChambre select NumChambre from TarifChambre like 'CHB1%'
 
 -- 7.	Clients qui ont passé au total au moins 7 jours à l’hôtel au cours d’un même mois (Id, Nom, mois où ils ont passé au moins 7 jours)
 select cl.Id, cl.Nom, Month(ca.Jour) as Mois from Client cl
