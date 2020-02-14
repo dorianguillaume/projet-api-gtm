@@ -21,14 +21,18 @@ namespace projetAPI_GTM.Controllers
             _context = context;
         }
 
-        // GET: api/Factures
+        // GET ALL : GENERATION ENTITY
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Facture>>> GetFacture()
         {
             return await _context.Facture.ToListAsync();
         }
 
-        // GET: api/Factures/5
+        /// <summary>
+        /// 2. Obtenir une facture identifiée par son Id, avec son détail
+        /// </summary>
+        /// <param name="id">Id du Client</param>
+        /// <returns>Facture avec LigneFacture</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Facture>> GetFacture(int id)
         {
@@ -36,13 +40,20 @@ namespace projetAPI_GTM.Controllers
 
             if (facture == null)
             {
-                return NotFound();
+                return NotFound("Aucune facture n'est enregistré avec cet identifiant");
             }
-
             return facture;
         }
 
-        // Obtenir les Factures d'un client avec son id et pour une date donnée
+        /// <summary>
+        /// 1. Obtenir la liste des factures d’un client
+        /// à partir d’une date donnée ou plusieurs (par défaut sur un an glissant) 
+        /// sans leurs détails 
+        /// </summary>
+        /// <param name="id">Id du Client</param>
+        /// <param name="date1">DateTime</param>
+        /// <param name="date2">DateTime</param>
+        /// <returns>List Facture</returns>
         [HttpGet("client/{id}")]
         public async Task<ActionResult<IEnumerable<Facture>>> GetFacture(int id, [FromQuery] DateTime date1, [FromQuery] DateTime date2)
         {
@@ -72,9 +83,7 @@ namespace projetAPI_GTM.Controllers
             return factures;
         }
 
-        // PUT: api/Factures/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        // PUT: GENERATION ENTITY
         [HttpPut("{id}")]
         public async Task<IActionResult> PutFacture(int id, Facture facture)
         {
@@ -104,8 +113,14 @@ namespace projetAPI_GTM.Controllers
             return NoContent();
         }
 
-        //Modification Date et Mode de Paiement UNIQUEMENT d'une facture
-        //On peut ajouter d'autres éléments dans la requête mais ils ne seront pas modifiés
+        /// <summary>
+        /// 5. Mettre à jour la date et le mode de paiement d'une facture
+        /// Modification Date et Mode de Paiement UNIQUEMENT d'une facture
+        /// (On peut ajouter d'autres éléments dans la requête mais ils ne seront pas modifiés)
+        /// </summary>
+        /// <param name="id">Id Facture</param>
+        /// <param name="facture">Facture</param>
+        /// <returns>Requête OK quand valide</returns>
         [HttpPut("{id}/paiement")]
         public async Task<IActionResult> PutFacturePaiement(int id, Facture facture)
         {
@@ -131,17 +146,15 @@ namespace projetAPI_GTM.Controllers
                     return BadRequest("Le mode de paiement n'est pas valide (CB - CHQ - ESP)");
                 }
                 else return BadRequest("Erreur lors de la mise à jour de la facture");
-
-   
             }
-
             return Ok("Le mode de paiement et la date de votre facture ont bien été modifiés");
         }
 
-        // Créer une nouvelle facture
-        // POST: api/Factures
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        /// <summary>
+        /// 3. Créer une facture
+        /// </summary>
+        /// <param name="facture">Facture</param>
+        /// <returns>Facture créée</returns>
         [HttpPost]
         public async Task<ActionResult<Facture>> PostFacture(Facture facture)
         {
@@ -151,7 +164,13 @@ namespace projetAPI_GTM.Controllers
             return CreatedAtAction("GetFacture", new { id = facture.Id }, facture);
         }
 
-        // Ajouter une ligne à une facture donnée (incrémentation manuelle car pas auto-incrémenté)
+        /// <summary>
+        /// 4. Ajouter une ligne à une facture donnée
+        /// (incrémentation manuelle car pas auto-incrémenté)
+        /// </summary>
+        /// <param name="id">Id Facture</param>
+        /// <param name="lignefacture">LigneFacture</param>
+        /// <returns>Requête OK si la ligne est créé</returns>
         [HttpPost("{id}/lignefacture")]
         public async Task<ActionResult> PostLigneFacture(int id, LigneFacture lignefacture)
         {
@@ -182,7 +201,7 @@ namespace projetAPI_GTM.Controllers
             return Ok("Le numéro de la ligne de facture créée est le suivant : " + lignefacture.NumLigne);
         }
 
-        // DELETE: api/Factures/5
+        // DELETE: GENERATION ENTITY
         [HttpDelete("{id}")]
         public async Task<ActionResult<Facture>> DeleteFacture(int id)
         {
