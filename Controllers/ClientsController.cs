@@ -21,7 +21,10 @@ namespace projetAPI_GTM.Controllers
             _context = context;
         }
 
-        // GET: grandhotel/Clients
+        /// <summary>
+        /// 1. Obtenir la liste des clients
+        /// </summary>
+        /// <returns>List Client</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Client>>> GetClient()
         {
@@ -29,10 +32,10 @@ namespace projetAPI_GTM.Controllers
         }
 
         /// <summary>
-        /// GET: grandhotel/Clients/5
+        /// 2. Obtenir un client et ses coordonnées (adresse postale et liste de ses N° de téléphone) à partir de son id
         /// </summary>
         /// <param name="id">Id du client</param>
-        /// <returns>Retourn les informations d'un client avec le détail de son Adresse et de son/ses numéros de téléphones</returns>
+        /// <returns>Client avec Adresse et List Telephone</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Client>> GetClient(int id)
         {
@@ -40,15 +43,13 @@ namespace projetAPI_GTM.Controllers
 
             if (client == null)
             {
-                return NotFound();
+                return NotFound("Aucun client n'est enregistré avec cet identifiant");
             }
 
             return client;
         }
 
-        // PUT: grandhotel/Clients/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        // PUT: GENERATION ENTITY
         [HttpPut("{id}")]
         public async Task<IActionResult> PutClient(int id, Client client)
         {
@@ -79,9 +80,11 @@ namespace projetAPI_GTM.Controllers
             return Ok();
         }
 
-        // POST: grandhotel/Clients
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        /// <summary>
+        /// 3. Créer un nouveau client et son adresse
+        /// </summary>
+        /// <param name="client">Client</param>
+        /// <returns>Client créé</returns>
         [HttpPost]
         public async Task<ActionResult<Client>> PostClient(Client client)
         {
@@ -91,6 +94,12 @@ namespace projetAPI_GTM.Controllers
             return CreatedAtAction("GetClient", new { id = client.Id }, client);
         }
 
+        /// <summary>
+        /// 4. Ajouter un N° de téléphone à un client
+        /// </summary>
+        /// <param name="id">Id du Client</param>
+        /// <param name="telephone">Telephone</param>
+        /// <returns>Requête Ok si création réussi</returns>
         [HttpPost("{id}/telephone")]
         public async Task<ActionResult> PostTelephone(int id, Telephone telephone)
         {
@@ -114,19 +123,27 @@ namespace projetAPI_GTM.Controllers
                 {
                     return BadRequest("Le numéro de téléphone existe déjà dans la base");
                 }
+                if (sqle.Number == 547)
+                {
+                    return BadRequest("Le client renseigné n'existe pas");
+                }
                 return BadRequest("Erreur lors de l'ajout du numéro de téléphone dans la base");
             }
 
             return Ok("Le numéro de téléphone créé est le suivant : " + telephone.Numero);
         }
 
-        // DELETE: api/Clients/5
+        /// <summary>
+        /// 5. Supprimer un client et ses informations liées (adresse, téléphone)
+        /// SI ce client n’est associé à aucune facture ni réservation de chambre
+        /// </summary>
+        /// <param name="id">Id du Client</param>
+        /// <returns>Client supprimé</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult<Client>> DeleteClient(int id)
         {
             var client = await _context.Client.Include(c => c.Reservation).FirstOrDefaultAsync(c => c.Id == id);
-
-
+            
             if (client == null)
             {
                 return NotFound("Aucun client identifié par ce numéro n'a pu être trouvé");
@@ -137,7 +154,7 @@ namespace projetAPI_GTM.Controllers
             }
             else
             {
-                //In récupère adresse et téléphones
+                //On récupère adresse et téléphones
                 var adresse = await _context.Adresse.Where(a => a.IdClient == id).FirstOrDefaultAsync();
                 var telephone = await _context.Telephone.Where(t => t.IdClient == id).ToListAsync();
 
