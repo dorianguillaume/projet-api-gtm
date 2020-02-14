@@ -112,12 +112,7 @@ namespace projetAPI_GTM.Controllers
             if (id != facture.Id)
             {
                 return BadRequest("L'ID de l'URL ne correspond pas à celui de du corps de la requête.");
-            }
-
-            if (facture.CodeModePaiement != "CB" || facture.CodeModePaiement != "CHQ" || facture.CodeModePaiement != "ESP")
-            {
-                return BadRequest("Le mode de paiement n'est pas valide");
-            }
+            }     
             
             _context.Attach(facture);
             _context.Entry(facture).Property("DatePaiement").IsModified = true;
@@ -127,19 +122,20 @@ namespace projetAPI_GTM.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateException e)
             {
-                if (!FactureExists(id))
+                var sqle = e.InnerException as SqlException;
+
+                if (sqle.Number == 8152)
                 {
-                    return NotFound("Aucune facture n'est associée à cet identifiant");
+                    return BadRequest("Le mode de paiement n'est pas valide (CB - CHQ - ESP)");
                 }
-                else
-                {
-                    throw;
-                }
+                else return BadRequest("Erreur lors de la mise à jour de la facture");
+
+   
             }
 
-            return NoContent();
+            return Ok("Le mode de paiement et la date de votre facture ont bien été modifiés");
         }
 
         // Créer une nouvelle facture
