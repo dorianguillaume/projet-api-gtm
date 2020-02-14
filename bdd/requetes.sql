@@ -8,32 +8,45 @@ move 'GrandHotel_log' to  N'C:\Users\Shadow\workspace\projetAPI-GTM\bdd\GrandHot
 select C.Id, C.Nom from Client C
 join Telephone T on (C.Id = T.IdClient)
 where C.Id not in (select IdClient from Telephone where CodeType = 'M');
+-- RESULTAT : 558 Lignes - (Debut : Id=6	Nom=FAURE - Fin : Id=600	Nom=Unruh)
 
 -- 2.	Le taux moyen de réservation de l’hôtel par mois-année (2015-01, 2015-02…), c'est à dire la moyenne sur les chambres du ratio (nombre de jours de réservation dans le mois / nombre de jours du mois)
-select Mois, Annee, avg(MoyenneMois) 
+select Mois, Annee, avg(MoyenneMois) as TauxMoyenReservation
 from (select month(CL.Jour) as Mois, year(CL.Jour) as Annee, cast(count(day(CL.Jour)) as decimal)/CAST(Day(EOMONTH(CL.Jour))as Int) as MoyenneMois from Calendrier CL 
 inner join Reservation R on(CL.Jour = R.Jour)
 inner join Chambre CH on(R.NumChambre = CH.Numero)
 group by month(CL.Jour), year(CL.Jour), CH.Numero, (Day(EOMONTH(CL.Jour)))) as m
 group by Mois, Annee
 order by Annee, Mois
-
+-- RESULTAT : 47 Lignes - (Debut : Mois=12	Annee=2014	TauxMoyenReservation=0.77096774193 - Fin : Mois=11	Annee=2018	TauxMoyenReservation=0.72666666666)
 
 -- 3.	Le nombre total de jours réservés par les clients ayant une carte de fidélité au cours de la dernière année du calendrier (obtenue dynamiquement)
 select count(*) as NombreTotalJours from Calendrier ca
 join Reservation r on ca.Jour = r.Jour
 join Client cl on r.IdClient = cl.Id
 where cl.CarteFidelite = 1 and year(ca.Jour) = (select top(1) year(Jour) from Calendrier order by year(Jour) desc) 
+-- RESULTAT : NombreTotalJours=72
 
 -- 4.	Le chiffre d’affaire de l’hôtel par trimestre de chaque année
 -- Chiffre d'affaire TTC: On tient compte de la réduction, celle-ci s'applique sur le prix HT et après on ajoute la TVA
 -- Essais de sélection des trimestres
 
-select year(f.DateFacture), datepart(qq, f.DateFacture), sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) as Total 
+select year(f.DateFacture) as Annee, datepart(qq, f.DateFacture)as Trimestre, sum(MontantHT*(1-TauxReduction)*(1+TauxTVA)*Quantite) as Total 
 from LigneFacture lf
 join Facture f on lf.IdFacture = f.Id
 group by year(f.DateFacture), datepart(qq, f.DateFacture)
 order by year(f.DateFacture), datepart(qq, f.DateFacture)
+-- RESULT :
+-- Annee Trimestre   Total 
+-- 2015		4		1194.435000000
+-- 2016		1		76892.970000000
+-- 2016		2		84689.000000000
+-- 2016		3		87791.660000000
+-- 2016		4		95415.540000000
+-- 2017		1		100531.112000000
+-- 2017		2		100969.880000000
+-- 2017		3		109659.660000000
+-- 2017		4		122614.800000000
 
 -- 5.	Le nombre d'argent qu'a depensé chaque client / qu'on regroupe par tranche
 -- Le nombre de clients dans chaque tranche de 1000 € de chiffre d’affaire total généré. La première tranche est < 5000 €, et la dernière >= 8000 €
@@ -87,6 +100,14 @@ from (
 
 ) as Ratio
 
+-- RESULTAT :
+-- Tranche			NbClients
+-- 5000 et Moins	0
+-- 5000-6000		1
+-- 6000-7000		17
+-- 7000-8000		39
+-- 8000 et Plus		43
+
 -- 6.	Code T-SQL pour augmenter à partir du 01/01/2019 les tarifs des chambres de type 1 de 5%, et ceux des chambres de type 2 de 4% par rapport à l'année précédente
 -- Demander si il faut modifier TarifChambre ???
 declare @PrixType1 int;
@@ -120,6 +141,10 @@ join Reservation r on cl.Id = r.IdClient
 join Calendrier ca on r.Jour = ca.Jour
 group by cl.Id, cl.Nom,  Month(ca.Jour), Year(ca.Jour)
 Having count(Month(ca.Jour)) >= 7;
+-- RESULTAT :
+-- Id	Nom			Mois
+-- 505	Milionis	3
+-- 341	Stimac		5
 
 -- 8.	Clients qui sont restés à l’hôtel au moins deux jours de suite au cours de l’année 2017
 SELECT distinct Id
@@ -131,4 +156,9 @@ where year(jour)=2017 and 1 in
     from reservation r2
     where year(jour)=2017 and R2.IdClient=id
 )
+-- RESULTAT :
+-- Id
+-- 11
+-- 277
+-- 505
 
