@@ -104,6 +104,44 @@ namespace projetAPI_GTM.Controllers
             return NoContent();
         }
 
+        //Modification Date et Mode de Paiement UNIQUEMENT d'une facture
+        //On peut ajouter d'autres éléments dans la requête mais ils ne seront pas modifiés
+        [HttpPut("{id}/paiement")]
+        public async Task<IActionResult> PutFacturePaiement(int id, Facture facture)
+        {
+            if (id != facture.Id)
+            {
+                return BadRequest("L'ID de l'URL ne correspond pas à celui de du corps de la requête.");
+            }
+
+            if (facture.CodeModePaiement != "CB" || facture.CodeModePaiement != "CHQ" || facture.CodeModePaiement != "ESP")
+            {
+                return BadRequest("Le mode de paiement n'est pas valide");
+            }
+            
+            _context.Attach(facture);
+            _context.Entry(facture).Property("DatePaiement").IsModified = true;
+            _context.Entry(facture).Property("CodeModePaiement").IsModified = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!FactureExists(id))
+                {
+                    return NotFound("Aucune facture n'est associée à cet identifiant");
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
         // Créer une nouvelle facture
         // POST: api/Factures
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
@@ -145,9 +183,9 @@ namespace projetAPI_GTM.Controllers
                 return BadRequest("Erreur lors de l'ajout de la ligne de facture dans la base");
             }
 
-            return Ok("Le numéro de ligne de facture créé est le suivant : " + lignefacture.NumLigne);
+            return Ok("Le numéro de la ligne de facture créée est le suivant : " + lignefacture.NumLigne);
         }
-    
+
         // DELETE: api/Factures/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Facture>> DeleteFacture(int id)
