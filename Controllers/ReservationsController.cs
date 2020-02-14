@@ -21,14 +21,18 @@ namespace projetAPI_GTM.Controllers
             _context = context;
         }
 
-        // GET: api/Reservations
+        // GET ALL : GENERATION ENTITY
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Reservation>>> GetReservation()
         {
             return await _context.Reservation.ToListAsync();
         }
 
-        // Obtenir la liste des réservations pour une date donnée
+        /// <summary>
+        /// 1. Obtenir les réservations pour une date donnée
+        /// </summary>
+        /// <param name="date">DateTime</param>
+        /// <returns>List Reservation</returns>
         [HttpGet("dateresa/")]
         public async Task<ActionResult<IEnumerable<Reservation>>> GetReservation([FromQuery] DateTime date)
         {
@@ -44,11 +48,10 @@ namespace projetAPI_GTM.Controllers
             if (!reservations.Any())
             {
                 return NotFound("Aucune réservation n'a été enregistré à cette date");
-            }else return reservations;
-           
+            } else return reservations;
         }
 
-        // GET: api/Reservations/5
+        // GET: ENTITY GENERATION
         [HttpGet("{id}")]
         public async Task<ActionResult<Reservation>> GetReservation(short id)
         {
@@ -62,7 +65,11 @@ namespace projetAPI_GTM.Controllers
             return reservation;
         }
 
-        // Obtenir les Réservations d'un client donné avec son id
+        /// <summary>
+        /// 2. Obtenir l’historique des réservations d’un client
+        /// </summary>
+        /// <param name="id">Id du Client</param>
+        /// <returns>List de Reservation</returns>
         [HttpGet("client/{id}")]
         public async Task<ActionResult<IEnumerable<Reservation>>> GetReservation(int id)
         {
@@ -77,51 +84,58 @@ namespace projetAPI_GTM.Controllers
         }
 
         /// <summary>
-        /// PUT: api/Reservations/5
+        /// 3.B - Mofidication d'une réservation en fonction de sa date et de sa chambre
+        /// (On ne peut pas modifier date de réservation et chambre)
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="reservation"></param>
-        /// <returns></returns>
-        [HttpPut("chambre/{id}/date/{date}")]
-        public async Task<IActionResult> PutReservation(short id, DateTime date, Reservation reservation)
+        /// <param name="id">NumChambre</param>
+        /// <param name="date">DateTime --> Date de réservation</param>
+        /// <param name="reservation">Reservation (modifications)</param>
+        /// <returns>Requête ok si modif accépter</returns>
+        [HttpPut("client/{id}")]
+        public async Task<IActionResult> PutReservation(short id, Reservation reservation)
         {
-            var reservationAModifer = await _context.Reservation.Where(r => r.Jour == date && r.NumChambre == id).FirstOrDefaultAsync();
-
-            if (id != reservation.NumChambre || date != reservation.Jour)
+            if (id != reservation.IdClient)
             {
                 return BadRequest("Il y a une erreur entre les paramètre passer dans l'URL et dans le corps de la requête");
             }
 
+            //On récupère la potentiel réservation pour s'assurer qu'elle existe
+            var reservationAModifer = await _context.Reservation.Where(r => r.IdClient == id && r.NumChambre == reservation.NumChambre && r.Jour == reservation.Jour).FirstOrDefaultAsync();
             if (reservationAModifer == null)
             {
                 return NotFound("Aucune réservation n'est enregistrée pour cette chambre à cette date");
             }
-
-            _context.Entry(reservation).State = EntityState.Modified;
-
-            try
+            else
             {
-                await _context.SaveChangesAsync();   
-            }
-            catch (DbUpdateException e)
-            {
-                var sqle = e.InnerException as SqlException;
 
-                return BadRequest("Erreur lors de la modification de la reservation : "+sqle.Number);
-            }
+                reservationAModifer.NbPersonnes = reservation.NbPersonnes;
+                reservationAModifer.HeureArrivee = reservation.HeureArrivee;
+                reservationAModifer.Travail = reservation.Travail;
+
+                _context.Entry(reservationAModifer).State = EntityState.Modified;
+
+                try
+                {
+                    await _context.SaveChangesAsync();   
+                }
+                catch (DbUpdateException e)
+                {
+                    var sqle = e.InnerException as SqlException;
+
+                    return BadRequest("Erreur lors de la modification de la reservation : "+sqle.Number);
+                }
             
-           return Ok("Votre reservation a été modifiée avec succès");
+               return Ok("Votre reservation a été modifiée avec succès");
+            }
+
 
         }
 
         /// <summary>
-        /// Ajout d'une réservation
+        /// 3.A - Ajout d'une réservation
         /// </summary>
-        /// <param name="reservation"></param>
-        /// <returns></returns>
-        // POST: api/Reservations
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+        /// <param name="reservation">Reservation</param>
+        /// <returns>Reservation créée</returns>
         [HttpPost]
         public async Task<ActionResult<Reservation>> PostReservation(Reservation reservation)
         {
@@ -146,11 +160,11 @@ namespace projetAPI_GTM.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 3.C - Suppression d'une réservation
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="date"></param>
-        /// <returns></returns>
+        /// <param name="id">NumChambre</param>
+        /// <param name="date">DateTime de la Reservation</param>
+        /// <returns>Reservation supprimée</returns>
         // DELETE: api/Reservations/5
         [HttpDelete("chambre/{id}/date/{date}")]
         public async Task<ActionResult<Reservation>> DeleteReservation(short id, DateTime date)
@@ -161,6 +175,7 @@ namespace projetAPI_GTM.Controllers
             {
                 return NotFound("Aucune réservation n'est enregistré à cette date pour cette chambre");
             }
+
 
             _context.Reservation.Remove(reservation);
             await _context.SaveChangesAsync();
