@@ -110,6 +110,7 @@ from (
 
 -- 6.	Code T-SQL pour augmenter à partir du 01/01/2019 les tarifs des chambres de type 1 de 5%, et ceux des chambres de type 2 de 4% par rapport à l'année précédente
 -- Demander si il faut modifier TarifChambre ???
+begin tran
 declare @PrixType1 int;
 declare @PrixType2 int;
 
@@ -132,8 +133,14 @@ from(
 
 insert into Tarif(Code, DateDebut, Prix) values('CHB1-2019', '2019-01-01', @PrixType1)
 insert into Tarif(Code, DateDebut, Prix) values('CHB2-2019', '2019-01-01', @PrixType2)
+-- RESULTAT : 
+-- CHB1-2019	2019-01-01	63.000
+-- CHB2-2019	2019-01-01	80.000
 
---insert into TarifChambre select NumChambre from TarifChambre like 'CHB1%'
+insert into TarifChambre(NumChambre, CodeTarif) select distinct NumChambre, SUBSTRING(CodeTarif, 0, 9)+'9' from TarifChambre
+-- RESULTAT : Ajout du Code tarif dans TarifChambre en fonction du type de chambre
+
+rollback tran
 
 -- 7.	Clients qui ont passé au total au moins 7 jours à l’hôtel au cours d’un même mois (Id, Nom, mois où ils ont passé au moins 7 jours)
 select cl.Id, cl.Nom, Month(ca.Jour) as Mois from Client cl
