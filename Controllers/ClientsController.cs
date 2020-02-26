@@ -18,7 +18,7 @@ namespace projetAPI_GTM.Controllers
 
         public ClientsController(GrandHotelContext context)
         {
-            _context = context;
+            _context = context; //test
         }
 
         // GET: grandhotel/Clients
